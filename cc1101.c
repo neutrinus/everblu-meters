@@ -13,6 +13,11 @@ uint8_t CC1101_status_state=0;
 uint8_t CC1101_status_FIFO_FreeByte=0;
 uint8_t CC1101_status_FIFO_ReadByte=0;
 uint8_t debug_out=1;
+
+#define METER_YEAR  		16
+#define METER_SERIAL  		1234567
+
+
 #define TX_LOOP_OUT 300
 /*---------------------------[CC1100 - R/W offsets]------------------------------*/
 #define WRITE_SINGLE_BYTE  		0x00
@@ -228,10 +233,10 @@ halRfWriteReg(FSCTRL1,0x08); //Frequency Synthesizer Control
 
 halRfWriteReg(FREQ2,0x10);   //Frequency Control Word, High Byte  Base frequency = 433.82
 halRfWriteReg(FREQ1,0xAF);   //Frequency Control Word, Middle Byte
-//halRfWriteReg(FREQ0,0x75); //Frequency Control Word, Low Byte la fréquence reel etait 433.790 (centre)
+halRfWriteReg(FREQ0,0x75); //Frequency Control Word, Low Byte la fréquence reel etait 433.790 (centre)
 //halRfWriteReg(FREQ0,0xC1); //Frequency Control Word, Low Byte rasmobo 814 824 (KO) ; minepi 810 820 (OK)
 //halRfWriteReg(FREQ0,0x9B); //rasmobo 808.5  -16  pour -38
-halRfWriteReg(FREQ0,frequence a ajuster en fonction de votre CC1101 0xB7);   //rasmobo 810 819.5 OK
+//halRfWriteReg(FREQ0,0xB7);   //rasmobo 810 819.5 OK
 //mon compteur F1 : 433809500  F2 : 433820000   deviation +-5.25khz depuis 433.81475M
 
 halRfWriteReg(MDMCFG4,0xF6); //Modem Configuration   RX filter BW = 58Khz
@@ -662,7 +667,7 @@ uint8_t scenario_releve(void)
 	
 	uint8_t txbuffer[100]; 
     uint8_t TS_len_u8;
-    TS_len_u8=Make_Radian_Master_req(txbuffer, année , serial ); 
+    TS_len_u8=Make_Radian_Master_req(txbuffer, METER_YEAR , METER_SERIAL ); 
 	
 	halRfWriteReg(MDMCFG2,0x00);  //clear MDMCFG2 to do not send preamble and sync
 	halRfWriteReg(PKTCTRL0,0x02); //infinite packet len
