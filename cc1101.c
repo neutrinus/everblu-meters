@@ -681,11 +681,10 @@ struct tmeter_data get_meter_data(void)
 		meter_data_size=decode_4bitpbit_serial(rxBuffer, rxBuffer_size,meter_data);
 		// show_in_hex(meter_data,meter_data_size);
 		sdata = parse_meter_report(meter_data,meter_data_size);
-		return sdata;
 	}
 	else
 	{
 		echo_debug(debug_out,"TMO on REC\r\n");
 	}
-	return;
+	return sdata;
 }
