@@ -24,7 +24,7 @@ The project runs on Raspberry Pi with an RF transreciver (CC1101).
 ## Configuration
 1. Enable SPI in raspi-config.
 2. Install WiringPi from https://github.com/WiringPi/WiringPi/
-3. Install mosquitto-dev: `apt install mosquitto-dev`
+3. Install libmosquitto-dev: `apt install libmosquitto-dev`
 4. Set meter serial number and production date in `cc1101.c`, it can be found on the meter label itself:
 ![Cyble Meter Label](meter_label.png)
 5. Compile the code with `make`

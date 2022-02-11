@@ -14,8 +14,15 @@ uint8_t CC1101_status_FIFO_FreeByte=0;
 uint8_t CC1101_status_FIFO_ReadByte=0;
 uint8_t debug_out=0;
 
-#define METER_YEAR  		20
-#define METER_SERIAL  		1234567
+struct tmeter_data {
+        int liters;
+        int reads_counter; // how many times the meter has been readed
+        int battery_left; //in months
+	int time_start; // like 8am
+	int time_end; // like 4pm
+};
+
+
 
 
 #define TX_LOOP_OUT 300
@@ -421,19 +428,28 @@ uint8_t cc1101_wait_for_packet(int milliseconds)
 	return TRUE;
 }
 
-void display_meter_report (uint8_t *decoded_buffer , uint8_t size)
+struct tmeter_data parse_meter_report (uint8_t *decoded_buffer , uint8_t size)
 {
-		if (size >= 30)
-		{   
-			echo_debug(1,"\r\n%u/%u/20%u %u:%u:%u ",decoded_buffer[24],decoded_buffer[25],decoded_buffer[26],decoded_buffer[28],decoded_buffer[29],decoded_buffer[30]);
-			echo_debug(1,"%u litres ",decoded_buffer[18]+decoded_buffer[19]*256 + decoded_buffer[20]*65536 + decoded_buffer[21]*16777216);
-		}
-		if (size >= 48)
-		{
-			echo_debug(1,"Num %u %u Mois %uh-%uh ",decoded_buffer[48], decoded_buffer[31],decoded_buffer[44],decoded_buffer[45]);
-			decoded_buffer[43]=0; //to be sure that string will end
-			echo_debug(1,"serial:%s ",&decoded_buffer[32]);
-		}
+	struct tmeter_data data;
+
+
+	if (size >= 30)
+	{   
+		//echo_debug(1,"\r\n%u/%u/20%u %u:%u:%u ",decoded_buffer[24],decoded_buffer[25],decoded_buffer[26],decoded_buffer[28],decoded_buffer[29],decoded_buffer[30]);
+		//echo_debug(1,"%u litres ",decoded_buffer[18]+decoded_buffer[19]*256 + decoded_buffer[20]*65536 + decoded_buffer[21]*16777216);
+
+		data.liters = decoded_buffer[18]+decoded_buffer[19]*256 + decoded_buffer[20]*65536 + decoded_buffer[21]*16777216;
+	}
+	if (size >= 48)
+	{
+		//echo_debug(1,"Num %u %u Mois %uh-%uh ",decoded_buffer[48], decoded_buffer[31],decoded_buffer[44],decoded_buffer[45]);
+		data.reads_counter = decoded_buffer[48];
+		data.battery_left = decoded_buffer[31];
+		data.time_start = decoded_buffer[44];
+		data.time_end = decoded_buffer[45];
+	}
+
+	return data;
 }
 
 // Remove the start- and stop-bits in the bitstream , also decode oversampled bit 0xF0 => 1,0
@@ -565,6 +581,7 @@ int receive_radian_frame(int size_byte,int rx_tmo_ms ,uint8_t*rxBuffer,int rxBuf
 		}            
 	}
 	if(l_tmo<rx_tmo_ms) echo_debug(debug_out,"frame received\r\n"); else return 0;
+
 	/*stop reception*/
 	CC1101_CMD(SFRX);
 	CC1101_CMD(SIDLE);
@@ -597,8 +614,9 @@ int receive_radian_frame(int size_byte,int rx_tmo_ms ,uint8_t*rxBuffer,int rxBuf
 
 l'outils de reléve doit normalement acquité
 */
-uint8_t scenario_releve(void)
+struct tmeter_data get_meter_data(void)
 {
+	struct tmeter_data sdata;
 	uint8_t marcstate = 0xFF;
 	uint8_t wupbuffer[] ={0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55};
 	uint8_t wup2send =77;
@@ -658,14 +676,16 @@ uint8_t scenario_releve(void)
 	rxBuffer_size = receive_radian_frame(0x7C,700,rxBuffer,sizeof(rxBuffer));
 	if (rxBuffer_size)
 	{
-		if (debug_out)show_in_hex_array(rxBuffer, rxBuffer_size);
+		if (debug_out) show_in_hex_array(rxBuffer, rxBuffer_size);
+
 		meter_data_size=decode_4bitpbit_serial(rxBuffer, rxBuffer_size,meter_data);
 		// show_in_hex(meter_data,meter_data_size);
-		display_meter_report(meter_data,meter_data_size);
+		sdata = parse_meter_report(meter_data,meter_data_size);
+		return sdata;
 	}
 	else
 	{
 		echo_debug(debug_out,"TMO on REC\r\n");
 	}
-	return meter_data_size;
+	return;
 }

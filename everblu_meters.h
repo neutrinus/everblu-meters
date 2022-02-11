@@ -51,7 +51,7 @@ typedef unsigned char T_BOOL;       //1 octets
 
 #define GDO2 2 //header  13
 #define GDO1_MISO 13
-#define GDO0 0 //header  11
+#define GDO0 0 //header  11 
 #define MOSI 12
 #define cc1101_CSn 10 ////header  24 
 
@@ -59,4 +59,6 @@ typedef unsigned char T_BOOL;       //1 octets
 #include "utils.c"
 #include "wiringPi.h"
 #include "wiringPiSPI.h"
-#include "cc1101.c"
+
+
+
