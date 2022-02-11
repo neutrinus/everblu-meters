@@ -1,6 +1,6 @@
-﻿ /*  the radian_trx SW shall not be distributed  nor used for commercial product*/
- /*  it is exposed just to demonstrate CC1101 capability to reader water meter indexes */
- /*  there is no Warranty on radian_trx SW */
+﻿/*  the radian_trx SW shall not be distributed  nor used for commercial product*/
+/*  it is exposed just to demonstrate CC1101 capability to reader water meter indexes */
+/*  there is no Warranty on radian_trx SW */
 
 uint8_t RF_config_u8=0xFF;
 uint8_t RF_Test_u8=0;
@@ -12,7 +12,7 @@ uint8_t PA[] =  {0x60,0x00,0x00,0x00,0x00,0x00,0x00,0x00,};
 uint8_t CC1101_status_state=0;
 uint8_t CC1101_status_FIFO_FreeByte=0;
 uint8_t CC1101_status_FIFO_ReadByte=0;
-uint8_t debug_out=1;
+uint8_t debug_out=0;
 
 #define METER_YEAR  		16
 #define METER_SERIAL  		1234567
@@ -112,16 +112,16 @@ uint8_t halRfReadReg(uint8_t spi_instr)
 	uint8_t value;
 	uint8_t rbuf[2] = {0};
 	uint8_t len = 2;
-		
+
 	//rbuf[0] = spi_instr | READ_SINGLE_BYTE;
 	//rbuf[1] = 0;
 	//wiringPiSPIDataRW (0, rbuf, len) ;
 	//errata Section 3. You have to make sure that you read the same value of the register twice in a row before you evaluate it otherwise you might read a value that is a mix of 2 state values.
-    rbuf[0] = spi_instr | READ_SINGLE_BYTE;
+	rbuf[0] = spi_instr | READ_SINGLE_BYTE;
 	rbuf[1] = 0;
 	wiringPiSPIDataRW (0, rbuf, len) ;
 	CC1101_status_FIFO_ReadByte=rbuf[0]&0x0F;
-    CC1101_status_state=(rbuf[0]>>4)&0x0F;
+	CC1101_status_state=(rbuf[0]>>4)&0x0F;
 	value = rbuf[1];
 	return value;
 }
@@ -180,153 +180,151 @@ void CC1101_CMD(uint8_t spi_instr)
 {
 	uint8_t tbuf[1] = {0};
 	tbuf[0] = spi_instr | WRITE_SINGLE_BYTE;
- 	//echo_debug(debug_out,"SPI_data: 0x%02X\n", tbuf[0]);
- 	wiringPiSPIDataRW (0, tbuf, 1) ;
+	//echo_debug(debug_out,"SPI_data: 0x%02X\n", tbuf[0]);
+	wiringPiSPIDataRW (0, tbuf, 1) ;
 	CC1101_status_state=(tbuf[0]>>4)&0x0F;
- }
- 
- 
- 
+}
 
- void echo_cc1101_version(void);
+
+
+
+void echo_cc1101_version(void);
 
 //---------------[CC1100 reset functions "200us"]-----------------------
 void cc1101_reset(void)			// reset defined in cc1100 datasheet §19.1
 {// CS should be high from gpio load spi command
-/* commented car ne fonctionne pas avec wiringPi a voir avec BCM2835 ..
-        digitalWrite(cc1101_CSn, 0);     		// CS low
-        pinMode (cc1101_CSn, OUTPUT); 
-        delayMicroseconds(30);
-	digitalWrite(cc1101_CSn, 1);      	// CS high
-	delayMicroseconds(100);	 // min 40us
+	/* commented car ne fonctionne pas avec wiringPi a voir avec BCM2835 ..
+	   digitalWrite(cc1101_CSn, 0);     		// CS low
+	   pinMode (cc1101_CSn, OUTPUT); 
+	   delayMicroseconds(30);
+	   digitalWrite(cc1101_CSn, 1);      	// CS high
+	   delayMicroseconds(100);	 // min 40us
 	//Pull CSn low and wait for SO to go low
 	digitalWrite(cc1101_CSn, 0);     		// CS low
-        delayMicroseconds(30);
-*/
+	delayMicroseconds(30);
+	*/
 
 	CC1101_CMD(SRES);	//GDO0 pin should output a clock signal with a frequency of CLK_XOSC/192.
 	//periode 1/7.417us= 134.8254k  * 192 --> 25.886477M
 	//10 periode 73.83 = 135.4463k *192 --> 26Mhz
-    delay(1); //1ms for getting chip to reset properly
-	
-   	CC1101_CMD(SFTX);   //flush the TX_fifo content -> a must for interrupt handling
+	delay(1); //1ms for getting chip to reset properly
+
+	CC1101_CMD(SFTX);   //flush the TX_fifo content -> a must for interrupt handling
 	CC1101_CMD(SFRX);	//flush the RX_fifo content -> a must for interrupt handling	
 
 }
 
- void cc1101_configureRF_0(void)
+void cc1101_configureRF_0(void)
 {
-RF_config_u8=0;
-//
-// Rf settings for CC1101
-//
-halRfWriteReg(IOCFG2,0x0D);  //GDO2 Output Pin Configuration : Serial Data Output
-halRfWriteReg(IOCFG0,0x06);  //GDO0 Output Pin Configuration : Asserts when sync word has been sent / received, and de-asserts at the end of the packet.
-halRfWriteReg(FIFOTHR,0x47); //0x4? adc with bandwith< 325khz
-halRfWriteReg(SYNC1,0x55);   //01010101
-halRfWriteReg(SYNC0,0x00);   //00000000 
+	RF_config_u8=0;
+	//
+	// Rf settings for CC1101
+	//
+	halRfWriteReg(IOCFG2,0x0D);  //GDO2 Output Pin Configuration : Serial Data Output
+	halRfWriteReg(IOCFG0,0x06);  //GDO0 Output Pin Configuration : Asserts when sync word has been sent / received, and de-asserts at the end of the packet.
+	halRfWriteReg(FIFOTHR,0x47); //0x4? adc with bandwith< 325khz
+	halRfWriteReg(SYNC1,0x55);   //01010101
+	halRfWriteReg(SYNC0,0x00);   //00000000 
 
-//halRfWriteReg(PKTCTRL1,0x80);//Preamble quality estimator threshold=16  ; APPEND_STATUS=0; no addr check
-halRfWriteReg(PKTCTRL1,0x00);//Preamble quality estimator threshold=0   ; APPEND_STATUS=0; no addr check
-halRfWriteReg(PKTCTRL0,0x00);//fix length , no CRC
-halRfWriteReg(FSCTRL1,0x08); //Frequency Synthesizer Control
+	//halRfWriteReg(PKTCTRL1,0x80);//Preamble quality estimator threshold=16  ; APPEND_STATUS=0; no addr check
+	halRfWriteReg(PKTCTRL1,0x00);//Preamble quality estimator threshold=0   ; APPEND_STATUS=0; no addr check
+	halRfWriteReg(PKTCTRL0,0x00);//fix length , no CRC
+	halRfWriteReg(FSCTRL1,0x08); //Frequency Synthesizer Control
 
-halRfWriteReg(FREQ2,0x10);   //Frequency Control Word, High Byte  Base frequency = 433.82
-halRfWriteReg(FREQ1,0xAF);   //Frequency Control Word, Middle Byte
-halRfWriteReg(FREQ0,0x75); //Frequency Control Word, Low Byte la fréquence reel etait 433.790 (centre)
-//halRfWriteReg(FREQ0,0xC1); //Frequency Control Word, Low Byte rasmobo 814 824 (KO) ; minepi 810 820 (OK)
-//halRfWriteReg(FREQ0,0x9B); //rasmobo 808.5  -16  pour -38
-//halRfWriteReg(FREQ0,0xB7);   //rasmobo 810 819.5 OK
-//mon compteur F1 : 433809500  F2 : 433820000   deviation +-5.25khz depuis 433.81475M
+	halRfWriteReg(FREQ2,0x10);   //Frequency Control Word, High Byte  Base frequency = 433.82
+	halRfWriteReg(FREQ1,0xAF);   //Frequency Control Word, Middle Byte
+	halRfWriteReg(FREQ0,0x75); //Frequency Control Word, Low Byte la fréquence reel etait 433.790 (centre)
+	//halRfWriteReg(FREQ0,0xC1); //Frequency Control Word, Low Byte rasmobo 814 824 (KO) ; minepi 810 820 (OK)
+	//halRfWriteReg(FREQ0,0x9B); //rasmobo 808.5  -16  pour -38
+	//halRfWriteReg(FREQ0,0xB7);   //rasmobo 810 819.5 OK
+	//mon compteur F1 : 433809500  F2 : 433820000   deviation +-5.25khz depuis 433.81475M
 
-halRfWriteReg(MDMCFG4,0xF6); //Modem Configuration   RX filter BW = 58Khz
-halRfWriteReg(MDMCFG3,0x83); //Modem Configuration   26M*((256+83h)*2^6)/2^28 = 2.4kbps 
-halRfWriteReg(MDMCFG2,0x02); //Modem Configuration   2-FSK;  no Manchester ; 16/16 sync word bits detected
-halRfWriteReg(MDMCFG1,0x00); //Modem Configuration num preamble 2=>0 , Channel spacing_exp
-halRfWriteReg(MDMCFG0,0x00); /*# MDMCFG0 Channel spacing = 25Khz*/
-halRfWriteReg(DEVIATN,0x15);  //5.157471khz 
-//halRfWriteReg(MCSM1,0x0F);   //CCA always ; default mode RX
-halRfWriteReg(MCSM1,0x00);   //CCA always ; default mode IDLE
-halRfWriteReg(MCSM0,0x18);   //Main Radio Control State Machine Configuration
-halRfWriteReg(FOCCFG,0x1D);  //Frequency Offset Compensation Configuration
-halRfWriteReg(BSCFG,0x1C);   //Bit Synchronization Configuration
-halRfWriteReg(AGCCTRL2,0xC7);//AGC Control
-halRfWriteReg(AGCCTRL1,0x00);//AGC Control
-halRfWriteReg(AGCCTRL0,0xB2);//AGC Control
-halRfWriteReg(WORCTRL,0xFB); //Wake On Radio Control
-halRfWriteReg(FREND1,0xB6);  //Front End RX Configuration
-halRfWriteReg(FSCAL3,0xE9);  //Frequency Synthesizer Calibration
-halRfWriteReg(FSCAL2,0x2A);  //Frequency Synthesizer Calibration
-halRfWriteReg(FSCAL1,0x00);  //Frequency Synthesizer Calibration
-halRfWriteReg(FSCAL0,0x1F);  //Frequency Synthesizer Calibration
-halRfWriteReg(TEST2,0x81);   //Various Test Settings link to adc retention
-halRfWriteReg(TEST1,0x35);   //Various Test Settings link to adc retention
-halRfWriteReg(TEST0,0x09);   //Various Test Settings link to adc retention
+	halRfWriteReg(MDMCFG4,0xF6); //Modem Configuration   RX filter BW = 58Khz
+	halRfWriteReg(MDMCFG3,0x83); //Modem Configuration   26M*((256+83h)*2^6)/2^28 = 2.4kbps 
+	halRfWriteReg(MDMCFG2,0x02); //Modem Configuration   2-FSK;  no Manchester ; 16/16 sync word bits detected
+	halRfWriteReg(MDMCFG1,0x00); //Modem Configuration num preamble 2=>0 , Channel spacing_exp
+	halRfWriteReg(MDMCFG0,0x00); /*# MDMCFG0 Channel spacing = 25Khz*/
+	halRfWriteReg(DEVIATN,0x15);  //5.157471khz 
+	//halRfWriteReg(MCSM1,0x0F);   //CCA always ; default mode RX
+	halRfWriteReg(MCSM1,0x00);   //CCA always ; default mode IDLE
+	halRfWriteReg(MCSM0,0x18);   //Main Radio Control State Machine Configuration
+	halRfWriteReg(FOCCFG,0x1D);  //Frequency Offset Compensation Configuration
+	halRfWriteReg(BSCFG,0x1C);   //Bit Synchronization Configuration
+	halRfWriteReg(AGCCTRL2,0xC7);//AGC Control
+	halRfWriteReg(AGCCTRL1,0x00);//AGC Control
+	halRfWriteReg(AGCCTRL0,0xB2);//AGC Control
+	halRfWriteReg(WORCTRL,0xFB); //Wake On Radio Control
+	halRfWriteReg(FREND1,0xB6);  //Front End RX Configuration
+	halRfWriteReg(FSCAL3,0xE9);  //Frequency Synthesizer Calibration
+	halRfWriteReg(FSCAL2,0x2A);  //Frequency Synthesizer Calibration
+	halRfWriteReg(FSCAL1,0x00);  //Frequency Synthesizer Calibration
+	halRfWriteReg(FSCAL0,0x1F);  //Frequency Synthesizer Calibration
+	halRfWriteReg(TEST2,0x81);   //Various Test Settings link to adc retention
+	halRfWriteReg(TEST1,0x35);   //Various Test Settings link to adc retention
+	halRfWriteReg(TEST0,0x09);   //Various Test Settings link to adc retention
 
-SPIWriteBurstReg(PATABLE_ADDR, PA, 8);  
+	SPIWriteBurstReg(PATABLE_ADDR, PA, 8);  
 }
 
 void echo_cc1101_MARCSTATE (void)
 {
-  int8_t m_state;
-  m_state = halRfReadReg(MARCSTATE_ADDR); 
-  echo_debug(debug_out,"MARCSTATE : raw:0x%02X  0x%02X",m_state,m_state&0x1F );
-  switch (m_state&0x1F)
-  {
-    case 0x00 : echo_debug(debug_out,"(SLEEP SLEEP)");break;
-    case 0x01 : echo_debug(debug_out,"(IDLE IDLE)");break;
-    case 0x02 : echo_debug(debug_out,"(XOFF XOFF)");break;
-    case 0x03 : echo_debug(debug_out,"(VCOON_MC MANCAL)");break;
-    case 0x04 : echo_debug(debug_out,"(REGON_MC MANCAL)");break;
-    case 0x05 : echo_debug(debug_out,"(MANCAL MANCAL)");break;
-    case 0x06 : echo_debug(debug_out,"(VCOON FS_WAKEUP)");break;
-    case 0x07 : echo_debug(debug_out,"(REGON FS_WAKEUP)");break;
-    case 0x08 : echo_debug(debug_out,"(STARTCAL CALIBRATE)");break;
-    case 0x09 : echo_debug(debug_out,"(BWBOOST SETTLING)");break;
-    case 0x0A : echo_debug(debug_out,"(FS_LOCK SETTLING)");break;
-    case 0x0B : echo_debug(debug_out,"(IFADCON SETTLING)");break;
-    case 0x0C : echo_debug(debug_out,"(ENDCAL CALIBRATE)");break;
-    case 0x0D : echo_debug(debug_out,"(RX RX)");break;
-    case 0x0E : echo_debug(debug_out,"(RX_END RX)");break;
-    case 0x0F : echo_debug(debug_out,"(RX_RST RX)");break;
-    case 0x10 : echo_debug(debug_out,"(TXRX_SWITCH TXRX_SETTLING)");break;
-    case 0x11 : echo_debug(debug_out,"(RXFIFO_OVERFLOW RXFIFO_OVERFLOW)");break;
-    case 0x12 : echo_debug(debug_out,"(FSTXON FSTXON)");break;
-    case 0x13 : echo_debug(debug_out,"(TX TX)");break;
-    case 0x14 : echo_debug(debug_out,"(TX_END TX)");break;
-    case 0x15 : echo_debug(debug_out,"(RXTX_SWITCH RXTX_SETTLING)");break;
-    case 0x16 : echo_debug(debug_out,"(TXFIFO_UNDERFLOW TXFIFO_UNDERFLOW)");break;
-    default : echo_debug(debug_out,"(?)");break;
-  }
+	int8_t m_state;
+	m_state = halRfReadReg(MARCSTATE_ADDR); 
+	echo_debug(debug_out,"MARCSTATE : raw:0x%02X  0x%02X",m_state,m_state&0x1F );
+	switch (m_state&0x1F)
+	{
+		case 0x00 : echo_debug(debug_out,"(SLEEP SLEEP)");break;
+		case 0x01 : echo_debug(debug_out,"(IDLE IDLE)");break;
+		case 0x02 : echo_debug(debug_out,"(XOFF XOFF)");break;
+		case 0x03 : echo_debug(debug_out,"(VCOON_MC MANCAL)");break;
+		case 0x04 : echo_debug(debug_out,"(REGON_MC MANCAL)");break;
+		case 0x05 : echo_debug(debug_out,"(MANCAL MANCAL)");break;
+		case 0x06 : echo_debug(debug_out,"(VCOON FS_WAKEUP)");break;
+		case 0x07 : echo_debug(debug_out,"(REGON FS_WAKEUP)");break;
+		case 0x08 : echo_debug(debug_out,"(STARTCAL CALIBRATE)");break;
+		case 0x09 : echo_debug(debug_out,"(BWBOOST SETTLING)");break;
+		case 0x0A : echo_debug(debug_out,"(FS_LOCK SETTLING)");break;
+		case 0x0B : echo_debug(debug_out,"(IFADCON SETTLING)");break;
+		case 0x0C : echo_debug(debug_out,"(ENDCAL CALIBRATE)");break;
+		case 0x0D : echo_debug(debug_out,"(RX RX)");break;
+		case 0x0E : echo_debug(debug_out,"(RX_END RX)");break;
+		case 0x0F : echo_debug(debug_out,"(RX_RST RX)");break;
+		case 0x10 : echo_debug(debug_out,"(TXRX_SWITCH TXRX_SETTLING)");break;
+		case 0x11 : echo_debug(debug_out,"(RXFIFO_OVERFLOW RXFIFO_OVERFLOW)");break;
+		case 0x12 : echo_debug(debug_out,"(FSTXON FSTXON)");break;
+		case 0x13 : echo_debug(debug_out,"(TX TX)");break;
+		case 0x14 : echo_debug(debug_out,"(TX_END TX)");break;
+		case 0x15 : echo_debug(debug_out,"(RXTX_SWITCH RXTX_SETTLING)");break;
+		case 0x16 : echo_debug(debug_out,"(TXFIFO_UNDERFLOW TXFIFO_UNDERFLOW)");break;
+		default : echo_debug(debug_out,"(?)");break;
+	}
 
 
-   echo_debug(debug_out,"\r\n");
+	echo_debug(debug_out,"\r\n");
 }
 
 void echo_cc1101_full_status(void)
 {
-  echo_debug(debug_out,"PN:0x%02X  Ver:0x%02X\r\n",halRfReadReg(PARTNUM_ADDR),halRfReadReg(VERSION_ADDR));
-  echo_debug(debug_out,"Fest:0x%02X  LQI:0x%02X RSII:0x%02X\r\n",halRfReadReg(FREQEST_ADDR),halRfReadReg(LQI_ADDR),halRfReadReg(RSSI_ADDR));
-  echo_cc1101_MARCSTATE();
-  echo_debug(debug_out,"WOR:0x%02X%02X PKTSTAT:0x%02X\r\n",halRfReadReg(WORTIME1_ADDR),halRfReadReg(WORTIME0_ADDR),halRfReadReg(PKTSTATUS_ADDR));
-  echo_debug(debug_out,"VCO:0x%02X  TXBN:0x%02X RXBN:0x%02X\r\n",halRfReadReg(VCO_VC_DAC_ADDR),halRfReadReg(TXBYTES_ADDR),halRfReadReg(RXBYTES_ADDR));
+	echo_debug(debug_out,"PN:0x%02X  Ver:0x%02X\r\n",halRfReadReg(PARTNUM_ADDR),halRfReadReg(VERSION_ADDR));
+	echo_debug(debug_out,"Fest:0x%02X  LQI:0x%02X RSII:0x%02X\r\n",halRfReadReg(FREQEST_ADDR),halRfReadReg(LQI_ADDR),halRfReadReg(RSSI_ADDR));
+	echo_cc1101_MARCSTATE();
+	echo_debug(debug_out,"WOR:0x%02X%02X PKTSTAT:0x%02X\r\n",halRfReadReg(WORTIME1_ADDR),halRfReadReg(WORTIME0_ADDR),halRfReadReg(PKTSTATUS_ADDR));
+	echo_debug(debug_out,"VCO:0x%02X  TXBN:0x%02X RXBN:0x%02X\r\n",halRfReadReg(VCO_VC_DAC_ADDR),halRfReadReg(TXBYTES_ADDR),halRfReadReg(RXBYTES_ADDR));
 }
 
 void  cc1101_init(void)
 {   
-   // to use SPI pi@MinePi ~ $ gpio unload spi  then gpio load spi   
-   // sinon pas de MOSI ni pas de CSn , buffer de 4kB
-   if ((wiringPiSPISetup (0, 100000)) < 0)        // channel 0 100khz   min 500khz ds la doc ?
-   {
-     //fprintf (stderr, "Can't open the SPI bus: %s\n", strerror (errno)) ;
-     printf ("Can't open the SPI bus");
-     exit (EXIT_FAILURE) ;
-   }  
-   //echo_cc1101_MARCSTATE();
-   cc1101_reset();
-   delay(1); //1ms
-   //echo_cc1101_MARCSTATE();
-   cc1101_configureRF_0();  
+	// to use SPI pi@MinePi ~ $ gpio unload spi  then gpio load spi   
+	// sinon pas de MOSI ni pas de CSn , buffer de 4kB
+	if ((wiringPiSPISetup (0, 100000)) < 0)        // channel 0 100khz   min 500khz ds la doc ?
+	{
+		//fprintf (stderr, "Can't open the SPI bus: %s\n", strerror (errno)) ;
+		printf ("Can't open the SPI bus");
+		exit (EXIT_FAILURE) ;
+	}  
+	cc1101_reset();
+	delay(1); //1ms
+	cc1101_configureRF_0();  
 }
 
 int8_t cc1100_rssi_convert2dbm(uint8_t Rssi_dec)
@@ -344,8 +342,8 @@ int8_t cc1100_rssi_convert2dbm(uint8_t Rssi_dec)
 }
 
 
- /* configure cc1101 in receive mode */
- void cc1101_rec_mode(void)
+/* configure cc1101 in receive mode */
+void cc1101_rec_mode(void)
 {
 	uint8_t marcstate;
 	CC1101_CMD(SIDLE);								//sets to idle first. must be in
@@ -362,67 +360,65 @@ void echo_cc1101_version(void)
 {
 	echo_debug(debug_out,"CC1101 Partnumber: 0x%02X\r\n", halRfReadReg(PARTNUM_ADDR));
 	echo_debug(debug_out,"CC1101 Version != 00 or 0xFF  : 0x%02X\r\n", halRfReadReg(VERSION_ADDR));  // != 00 or 0xFF
-	//echo_cc1101_MARCSTATE();	
 }
 
 
 #define CFG_REGISTER  			0x2F									//47 registers
 void show_cc1101_registers_settings(void)
+{
+	uint8_t config_reg_verify[CFG_REGISTER],Patable_verify[8];
+	uint8_t i ;
+
+	SPIReadBurstReg(0,config_reg_verify,CFG_REGISTER);			//reads all 47 config register from cc1100	"359.63us"
+	SPIReadBurstReg(PATABLE_ADDR,Patable_verify,8);				//reads output power settings from cc1100	"104us"
+
+	echo_debug(debug_out,"Config Register in hex:\r\n");
+	echo_debug(debug_out," 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\r\n");
+	for(i = 0 ; i < CFG_REGISTER; i++) 		//showes rx_buffer for debug
 	{
-		uint8_t config_reg_verify[CFG_REGISTER],Patable_verify[8];
-		uint8_t i ;
-		
-		SPIReadBurstReg(0,config_reg_verify,CFG_REGISTER);			//reads all 47 config register from cc1100	"359.63us"
-		SPIReadBurstReg(PATABLE_ADDR,Patable_verify,8);				//reads output power settings from cc1100	"104us"
-		
-		echo_debug(debug_out,"Config Register in hex:\r\n");
-		echo_debug(debug_out," 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F\r\n");
-		for(i = 0 ; i < CFG_REGISTER; i++) 		//showes rx_buffer for debug
-			{
-				echo_debug(debug_out,"%02X ", config_reg_verify[i]);
+		echo_debug(debug_out,"%02X ", config_reg_verify[i]);
 
-				if(i==15 || i==31 || i==47 || i==63)			//just for beautiful output style
-					{	
-					echo_debug(debug_out,"\r\n");
-					}
-			}
+		if(i==15 || i==31 || i==47 || i==63)			//just for beautiful output style
+		{	
 			echo_debug(debug_out,"\r\n");
-			echo_debug(debug_out,"PaTable:\r\n");
-	
-			for(i = 0 ; i < 8; i++) 					//showes rx_buffer for debug
-				{
-				echo_debug(debug_out,"%02X ", Patable_verify[i]);
-				}
-			echo_debug(debug_out,"\r\n");
-
+		}
 	}
+	echo_debug(debug_out,"\r\n");
+	echo_debug(debug_out,"PaTable:\r\n");
+
+	for(i = 0 ; i < 8; i++) 					//showes rx_buffer for debug
+	{
+		echo_debug(debug_out,"%02X ", Patable_verify[i]);
+	}
+	echo_debug(debug_out,"\r\n");
+
+}
 
 uint8_t is_look_like_radian_frame(uint8_t* buffer, size_t len)
 {
-    int i,ret;
-    ret=FALSE;
+	int i,ret;
+	ret=FALSE;
 	for (i=0 ; i<len ; i++) {
-			if (buffer[i]==0xFF) ret=TRUE;
+		if (buffer[i]==0xFF) ret=TRUE;
 	}
-	
+
 	return ret;
 }
-	
+
 //-----------------[check if Packet is received]-------------------------
 uint8_t cc1101_check_packet_received(void)
 {
-  uint8_t rxBuffer[100];
-  uint8_t l_nb_byte,l_Rssi_dbm,l_lqi,l_freq_est,pktLen;
-  pktLen=0;
+	uint8_t rxBuffer[100];
+	uint8_t l_nb_byte,l_Rssi_dbm,l_lqi,l_freq_est,pktLen;
+	pktLen=0;
 	if (digitalRead(GDO0) == TRUE)
 	{		
-		digitalWrite(LED, 1); 
 		// get RF info at beginning of the frame
 		l_lqi= halRfReadReg(LQI_ADDR);
 		l_freq_est = halRfReadReg(FREQEST_ADDR);
 		l_Rssi_dbm = cc1100_rssi_convert2dbm(halRfReadReg(RSSI_ADDR));
-		
-	    while (digitalRead(GDO0) == TRUE)
+
+		while (digitalRead(GDO0) == TRUE)
 		{
 			delay(5); //wait for some byte received
 			l_nb_byte = (halRfReadReg(RXBYTES_ADDR) & RXBYTES_MASK);
@@ -432,22 +428,21 @@ uint8_t cc1101_check_packet_received(void)
 				pktLen +=l_nb_byte;
 			}			
 		}
-		digitalWrite(LED, 0); 
 		if (is_look_like_radian_frame(rxBuffer,pktLen))
 		{
-		   echo_debug(debug_out,"\r\n");
-		   print_time();
-		   echo_debug(debug_out," bytes=%u rssi=%u lqi=%u F_est=%u ",pktLen,l_Rssi_dbm,l_lqi,l_freq_est);
-		   show_in_hex_one_line(rxBuffer,pktLen);
-		  //show_in_bin(rxBuffer,l_nb_byte);		   
+			echo_debug(debug_out,"\r\n");
+			print_time();
+			echo_debug(debug_out," bytes=%u rssi=%u lqi=%u F_est=%u ",pktLen,l_Rssi_dbm,l_lqi,l_freq_est);
+			show_in_hex_one_line(rxBuffer,pktLen);
+			//show_in_bin(rxBuffer,l_nb_byte);		   
 		}
 		else
 		{
-		   echo_debug(debug_out,".");
+			echo_debug(debug_out,".");
 		}
 		fflush(stdout);
-		
-		
+
+
 		return TRUE;
 	}
 	return FALSE;
@@ -455,108 +450,105 @@ uint8_t cc1101_check_packet_received(void)
 
 uint8_t cc1101_wait_for_packet(int milliseconds)
 {
-    int i;
+	int i;
 	for(i = 0; i< milliseconds; i++)
+	{
+		delay(1); //in ms	
+		//echo_cc1101_MARCSTATE();
+		if (cc1101_check_packet_received()) //delay till system has data available
 		{
-			delay(1); //in ms	
-			//echo_cc1101_MARCSTATE();
-			if (cc1101_check_packet_received()) //delay till system has data available
-			{
-				return TRUE;
-			}
-			else if(i == milliseconds-1) 
-			{
-				//echo_debug(debug_out,"no packet received!\r\n");
-				return FALSE;
-			}
+			return TRUE;
 		}
+		else if(i == milliseconds-1) 
+		{
+			//echo_debug(debug_out,"no packet received!\r\n");
+			return FALSE;
+		}
+	}
 	return TRUE;
 }
 
 void display_meter_report (uint8_t *decoded_buffer , uint8_t size)
 {
- if(debug_out)
- { 
-     if (size >= 30)
-     {   
-         echo_debug(debug_out,"\r\n%u/%u/20%u %u:%u:%u ",decoded_buffer[24],decoded_buffer[25],decoded_buffer[26],decoded_buffer[28],decoded_buffer[29],decoded_buffer[30]);
-         echo_debug(debug_out,"%ulitres ",decoded_buffer[18]+decoded_buffer[19]*256 + decoded_buffer[20]*65536 + decoded_buffer[21]*16777216);
-     }
-     if (size >= 48)
-     {
-         echo_debug(debug_out,"Num%u %uMois %uh-%uh ",decoded_buffer[48], decoded_buffer[31],decoded_buffer[44],decoded_buffer[45]);
-         decoded_buffer[43]=0; //to be sure that string will end
-         echo_debug(debug_out,"serial:%s ",&decoded_buffer[32]);
-     }
-  }
+		if (size >= 30)
+		{   
+			echo_debug(1,"\r\n%u/%u/20%u %u:%u:%u ",decoded_buffer[24],decoded_buffer[25],decoded_buffer[26],decoded_buffer[28],decoded_buffer[29],decoded_buffer[30]);
+			echo_debug(1,"%ulitres ",decoded_buffer[18]+decoded_buffer[19]*256 + decoded_buffer[20]*65536 + decoded_buffer[21]*16777216);
+		}
+		if (size >= 48)
+		{
+			echo_debug(1,"Num%u %uMois %uh-%uh ",decoded_buffer[48], decoded_buffer[31],decoded_buffer[44],decoded_buffer[45]);
+			decoded_buffer[43]=0; //to be sure that string will end
+			echo_debug(1,"serial:%s ",&decoded_buffer[32]);
+		}
 }
 
-   	// Remove the start- and stop-bits in the bitstream , also decode oversampled bit 0xF0 => 1,0
-	// 01234567 ###01234 567###01 234567## #0123456 (# -> Start/Stop bit)
-	// is decoded to:
-	// 76543210 76543210 76543210 76543210
+// Remove the start- and stop-bits in the bitstream , also decode oversampled bit 0xF0 => 1,0
+// 01234567 ###01234 567###01 234567## #0123456 (# -> Start/Stop bit)
+// is decoded to:
+// 76543210 76543210 76543210 76543210
 uint8_t decode_4bitpbit_serial(uint8_t *rxBuffer, int l_total_byte, uint8_t* decoded_buffer )
 {
-   uint16_t i,j,k;
-   uint8_t bit_cnt=0;
-   int8_t bit_cnt_flush_S8=0;
-   uint8_t bit_pol=0;
-   uint8_t dest_bit_cnt=0;
-   uint8_t dest_byte_cnt=0;
-   uint8_t current_Rx_Byte;
-   //show_in_hex(rxBuffer,l_total_byte);
-   /*set 1st bit polarity*/
-   bit_pol=(rxBuffer[0]&0x80); //initialize with 1st bit state
-   
-   for (i=0;i<l_total_byte;i++)
-   {
-       current_Rx_Byte = rxBuffer[i];
-	   echo_debug(debug_out,"0x%02X ",rxBuffer[i]);
-       for(j=0;j<8;j++)
-	   {
-	      if ((current_Rx_Byte&0x80) == bit_pol) bit_cnt++;
-		  else if (bit_cnt==1)
-		  { //previous bit was a glich so bit has not really change
-		     bit_pol = current_Rx_Byte&0x80; //restore correct bit polarity
-			 bit_cnt = bit_cnt_flush_S8+1; //hope that previous bit was correctly decoded
-		  }
-		  else
-		  {  //bit polarity has change 
-	         bit_cnt_flush_S8 = bit_cnt;     
-             bit_cnt = (bit_cnt+2)/4;
-             bit_cnt_flush_S8 = bit_cnt_flush_S8 - (bit_cnt*4);
-			 
-			 for (k=0;k<bit_cnt;k++)
-			 { // insert the number of decoded bit
-			    if (dest_bit_cnt < 8)
-				{ //if data byte
-			       decoded_buffer[dest_byte_cnt] = decoded_buffer[dest_byte_cnt] >> 1;
-				   decoded_buffer[dest_byte_cnt] |= bit_pol;
+	uint16_t i,j,k;
+	uint8_t bit_cnt=0;
+	int8_t bit_cnt_flush_S8=0;
+	uint8_t bit_pol=0;
+	uint8_t dest_bit_cnt=0;
+	uint8_t dest_byte_cnt=0;
+	uint8_t current_Rx_Byte;
+	//show_in_hex(rxBuffer,l_total_byte);
+	/*set 1st bit polarity*/
+	bit_pol=(rxBuffer[0]&0x80); //initialize with 1st bit state
+
+	for (i=0;i<l_total_byte;i++)
+	{
+		current_Rx_Byte = rxBuffer[i];
+		echo_debug(debug_out,"0x%02X ",rxBuffer[i]);
+		for(j=0;j<8;j++)
+		{
+			if ((current_Rx_Byte&0x80) == bit_pol) bit_cnt++;
+			else if (bit_cnt==1)
+			{ //previous bit was a glich so bit has not really change
+				bit_pol = current_Rx_Byte&0x80; //restore correct bit polarity
+				bit_cnt = bit_cnt_flush_S8+1; //hope that previous bit was correctly decoded
+			}
+			else
+			{  //bit polarity has change 
+				bit_cnt_flush_S8 = bit_cnt;     
+				bit_cnt = (bit_cnt+2)/4;
+				bit_cnt_flush_S8 = bit_cnt_flush_S8 - (bit_cnt*4);
+
+				for (k=0;k<bit_cnt;k++)
+				{ // insert the number of decoded bit
+					if (dest_bit_cnt < 8)
+					{ //if data byte
+						decoded_buffer[dest_byte_cnt] = decoded_buffer[dest_byte_cnt] >> 1;
+						decoded_buffer[dest_byte_cnt] |= bit_pol;
+					}
+					dest_bit_cnt ++;
+					//if ((dest_bit_cnt ==9) && (!bit_pol)){  echo_debug(debug_out,"stop bit error9"); return dest_byte_cnt;}
+					if ((dest_bit_cnt ==10) && (!bit_pol)){ echo_debug(debug_out,"stop bit error10"); return dest_byte_cnt;}
+					if ((dest_bit_cnt >= 11) && (!bit_pol)) //start bit
+					{
+						dest_bit_cnt=0;
+						echo_debug(debug_out," dec[%i]=0x%02X \r\n",dest_byte_cnt,decoded_buffer[dest_byte_cnt]);
+						dest_byte_cnt++;				   
+					}				
 				}
-				dest_bit_cnt ++;
-				//if ((dest_bit_cnt ==9) && (!bit_pol)){  echo_debug(debug_out,"stop bit error9"); return dest_byte_cnt;}
-				if ((dest_bit_cnt ==10) && (!bit_pol)){ echo_debug(debug_out,"stop bit error10"); return dest_byte_cnt;}
-				if ((dest_bit_cnt >= 11) && (!bit_pol)) //start bit
-				{
-				   dest_bit_cnt=0;
-				   echo_debug(debug_out," dec[%i]=0x%02X \r\n",dest_byte_cnt,decoded_buffer[dest_byte_cnt]);
-				   dest_byte_cnt++;				   
-				}				
-			 }
-			 bit_pol = current_Rx_Byte&0x80;
-			 bit_cnt = 1;
-		  }
-		  current_Rx_Byte=current_Rx_Byte<<1;
-	   }//scan TX_bit
-   }//scan TX_byte
-   return dest_byte_cnt;
+				bit_pol = current_Rx_Byte&0x80;
+				bit_cnt = 1;
+			}
+			current_Rx_Byte=current_Rx_Byte<<1;
+		}//scan TX_bit
+	}//scan TX_byte
+	return dest_byte_cnt;
 }
 
 
 /* 
-search for 0101010101010000b sync pattern then change data rate in order to get 4bit per bit 
-search for end of sync pattern with start bit 1111111111110000b
-*/
+   search for 0101010101010000b sync pattern then change data rate in order to get 4bit per bit 
+   search for end of sync pattern with start bit 1111111111110000b
+   */
 int receive_radian_frame(int size_byte,int rx_tmo_ms ,uint8_t*rxBuffer,int rxBuffer_size)
 {	
 	uint8_t  l_byte_in_rx=0;
@@ -564,62 +556,60 @@ int receive_radian_frame(int size_byte,int rx_tmo_ms ,uint8_t*rxBuffer,int rxBuf
 	uint16_t l_radian_frame_size_byte = ((size_byte*(8+3))/8)+1;
 	int l_tmo=0;
 	uint8_t l_Rssi_dbm,l_lqi,l_freq_est;
-	
+
 	if (l_radian_frame_size_byte*4 > rxBuffer_size) {echo_debug(debug_out,"buffer too small\r\n");return 0;}
 	CC1101_CMD(SFRX);
-    halRfWriteReg(MCSM1,0x0F);   //CCA always ; default mode RX
-   	halRfWriteReg(MDMCFG2,0x02); //Modem Configuration   2-FSK;  no Manchester ; 16/16 sync word bits detected   
+	halRfWriteReg(MCSM1,0x0F);   //CCA always ; default mode RX
+	halRfWriteReg(MDMCFG2,0x02); //Modem Configuration   2-FSK;  no Manchester ; 16/16 sync word bits detected   
 	/* configure to receive beginning of sync pattern */   
-    halRfWriteReg(SYNC1,0x55);   //01010101
-    halRfWriteReg(SYNC0,0x50);   //01010000	
+	halRfWriteReg(SYNC1,0x55);   //01010101
+	halRfWriteReg(SYNC0,0x50);   //01010000	
 	halRfWriteReg(MDMCFG4,0xF6); //Modem Configuration   RX filter BW = 58Khz
 	halRfWriteReg(MDMCFG3,0x83); //Modem Configuration   26M*((256+83h)*2^6)/2^28 = 2.4kbps	
 	halRfWriteReg(PKTLEN,1); // just one byte of synch pattern
-    cc1101_rec_mode();
+	cc1101_rec_mode();
 	l_byte_in_rx =0;
 	while ((digitalRead(GDO0) == FALSE)&&(l_tmo<rx_tmo_ms)){delay(1);l_tmo++;}
 	if(l_tmo<rx_tmo_ms) echo_debug(debug_out,"GDO0! "); else return 0;
-	digitalWrite(LED, 1);
 	while ((l_byte_in_rx == 0)&&(l_tmo<rx_tmo_ms))
 	{
-			delay(5);l_tmo+=5; //wait for some byte received			
-			l_byte_in_rx = (halRfReadReg(RXBYTES_ADDR) & RXBYTES_MASK);
-			if (l_byte_in_rx)
-			{
-				SPIReadBurstReg(RX_FIFO_ADDR, &rxBuffer[0], l_byte_in_rx); // Pull data
-				if(debug_out)show_in_hex_one_line(rxBuffer,l_byte_in_rx);
-			}
+		delay(5);l_tmo+=5; //wait for some byte received			
+		l_byte_in_rx = (halRfReadReg(RXBYTES_ADDR) & RXBYTES_MASK);
+		if (l_byte_in_rx)
+		{
+			SPIReadBurstReg(RX_FIFO_ADDR, &rxBuffer[0], l_byte_in_rx); // Pull data
+			if(debug_out)show_in_hex_one_line(rxBuffer,l_byte_in_rx);
+		}
 	}
 	if(l_tmo<rx_tmo_ms) echo_debug(debug_out,"1st synch received "); else return 0;
-	
+
 	l_lqi= halRfReadReg(LQI_ADDR);
 	l_freq_est = halRfReadReg(FREQEST_ADDR);
 	l_Rssi_dbm = cc1100_rssi_convert2dbm(halRfReadReg(RSSI_ADDR));
 	echo_debug(debug_out," rssi=%u lqi=%u F_est=%u \r\n",l_Rssi_dbm,l_lqi,l_freq_est);
-	
+
 	fflush(stdout);	
 	halRfWriteReg(SYNC1,0xFF);   //11111111
-    halRfWriteReg(SYNC0,0xF0);   //11110000 la fin du synch pattern et le bit de start
+	halRfWriteReg(SYNC0,0xF0);   //11110000 la fin du synch pattern et le bit de start
 	halRfWriteReg(MDMCFG4,0xF8); //Modem Configuration   RX filter BW = 58Khz
-    halRfWriteReg(MDMCFG3,0x83); //Modem Configuration   26M*((256+83h)*2^8)/2^28 = 9.59kbps	
+	halRfWriteReg(MDMCFG3,0x83); //Modem Configuration   26M*((256+83h)*2^8)/2^28 = 9.59kbps	
 	halRfWriteReg(PKTCTRL0,0x02); //infinite packet len 
 	CC1101_CMD(SFRX);
 	cc1101_rec_mode();
-	
-    l_total_byte=0;
+
+	l_total_byte=0;
 	l_byte_in_rx =1;
 	while ((digitalRead(GDO0) == FALSE)&&(l_tmo<rx_tmo_ms)){delay(1);l_tmo++;}
-	digitalWrite(LED, 0);
 	if(l_tmo<rx_tmo_ms) echo_debug(debug_out,"GDO0! "); else return 0;	
 	while ((l_byte_in_rx > 0)&&(l_total_byte < (l_radian_frame_size_byte*4))&&(l_tmo<rx_tmo_ms))
 	{	
-		    delay(5);l_tmo+=5; //wait for some byte received			
-			l_byte_in_rx = (halRfReadReg(RXBYTES_ADDR) & RXBYTES_MASK);
-			if (l_byte_in_rx)
-			{				
-				SPIReadBurstReg(RX_FIFO_ADDR, &rxBuffer[l_total_byte], l_byte_in_rx); // Pull data
-				l_total_byte +=l_byte_in_rx;
-			}            
+		delay(5);l_tmo+=5; //wait for some byte received			
+		l_byte_in_rx = (halRfReadReg(RXBYTES_ADDR) & RXBYTES_MASK);
+		if (l_byte_in_rx)
+		{				
+			SPIReadBurstReg(RX_FIFO_ADDR, &rxBuffer[l_total_byte], l_byte_in_rx); // Pull data
+			l_total_byte +=l_byte_in_rx;
+		}            
 	}
 	if(l_tmo<rx_tmo_ms) echo_debug(debug_out,"frame received\r\n"); else return 0;
 	/*stop reception*/
@@ -627,19 +617,19 @@ int receive_radian_frame(int size_byte,int rx_tmo_ms ,uint8_t*rxBuffer,int rxBuf
 	CC1101_CMD(SIDLE);
 	//echo_debug(debug_out,"RAW buffer");
 	//show_in_hex_array(rxBuffer,l_total_byte); //16ms pour 124b->682b , 7ms pour 18b->99byte
-    /*restore default reg */
+	/*restore default reg */
 	halRfWriteReg(MDMCFG4,0xF6); //Modem Configuration   RX filter BW = 58Khz
 	halRfWriteReg(MDMCFG3,0x83); //Modem Configuration   26M*((256+83h)*2^6)/2^28 = 2.4kbps
 	halRfWriteReg(PKTCTRL0,0x00); //fix packet len
 	halRfWriteReg(PKTLEN,38);
 	halRfWriteReg(SYNC1,0x55);   //01010101
-    halRfWriteReg(SYNC0,0x00);   //00000000
+	halRfWriteReg(SYNC0,0x00);   //00000000
 	return l_total_byte;
 }
 
 /*
-scenario_releve
-2s de WUP 
+   scenario_releve
+   2s de WUP 
 130ms : trame interrogation de l'outils de reléve   ______------|...............-----
 43ms de bruit
 34ms 0101...01 
@@ -656,7 +646,7 @@ l'outils de reléve doit normalement acquité
 */
 uint8_t scenario_releve(void)
 {
-    uint8_t marcstate = 0xFF;
+	uint8_t marcstate = 0xFF;
 	uint8_t wupbuffer[] ={0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55};
 	uint8_t wup2send =77;
 	uint16_t tmo=0;
@@ -664,72 +654,65 @@ uint8_t scenario_releve(void)
 	int rxBuffer_size;
 	uint8_t meter_data[200];
 	uint8_t meter_data_size=0;
-	
+
 	uint8_t txbuffer[100]; 
-    uint8_t TS_len_u8;
-    TS_len_u8=Make_Radian_Master_req(txbuffer, METER_YEAR , METER_SERIAL ); 
-	
+	Make_Radian_Master_req(txbuffer, METER_YEAR , METER_SERIAL ); 
+
 	halRfWriteReg(MDMCFG2,0x00);  //clear MDMCFG2 to do not send preamble and sync
 	halRfWriteReg(PKTCTRL0,0x02); //infinite packet len
 	SPIWriteBurstReg(TX_FIFO_ADDR,wupbuffer,8); wup2send--;
-	digitalWrite(LED, 1);     				
-    CC1101_CMD(STX);	 //sends the data store into transmit buffer over the air
+	CC1101_CMD(STX);	 //sends the data store into transmit buffer over the air
 	delay(10); //to give time for calibration 
-    marcstate = halRfReadReg(MARCSTATE_ADDR); //to  update 	CC1101_status_state
+	marcstate = halRfReadReg(MARCSTATE_ADDR); //to  update 	CC1101_status_state
 	echo_debug(debug_out,"MARCSTATE : raw:0x%02X  0x%02X free_byte:0x%02X sts:0x%02X sending 2s WUP...\r\n",marcstate,marcstate&0x1F ,CC1101_status_FIFO_FreeByte,CC1101_status_state);
-	    while((CC1101_status_state == 0x02) && (tmo<TX_LOOP_OUT))					//in TX
-		{			
-			if (wup2send)
-			{	
-		           if (wup2send<0xFF)
-				   {
-					   if (CC1101_status_FIFO_FreeByte<=10)
-					   { //this give 10+20ms from previous frame : 8*8/2.4k=26.6ms  temps pour envoyer un wupbuffer
-					       delay(20);
-						   tmo++;tmo++;
-					   }
-					   SPIWriteBurstReg(TX_FIFO_ADDR,wupbuffer,8);
-					   wup2send--;
-				   }			
-		    }
-			else
-			{ 
-				  delay(130); //130ms time to free 39bytes FIFO space
-				  SPIWriteBurstReg(TX_FIFO_ADDR,txbuffer,39);
-				  if (debug_out)show_in_hex(&txbuffer[0],39);
-				  wup2send=0xFF;
+	while((CC1101_status_state == 0x02) && (tmo<TX_LOOP_OUT))					//in TX
+	{			
+		if (wup2send)
+		{	
+			if (wup2send<0xFF)
+			{
+				if (CC1101_status_FIFO_FreeByte<=10)
+				{ //this give 10+20ms from previous frame : 8*8/2.4k=26.6ms  temps pour envoyer un wupbuffer
+					delay(20);
+					tmo++;tmo++;
+				}
+				SPIWriteBurstReg(TX_FIFO_ADDR,wupbuffer,8);
+				wup2send--;
 			}			
-			delay(10); tmo++;
-			marcstate = halRfReadReg(MARCSTATE_ADDR); //read out state of cc1100 to be sure in IDLE and TX is finished this update also CC1101_status_state
-			//echo_debug(debug_out,"%ifree_byte:0x%02X sts:0x%02X\r\n",tmo,CC1101_status_FIFO_FreeByte,CC1101_status_state);			
 		}
+		else
+		{ 
+			delay(130); //130ms time to free 39bytes FIFO space
+			SPIWriteBurstReg(TX_FIFO_ADDR,txbuffer,39);
+			if (debug_out)show_in_hex(&txbuffer[0],39);
+			wup2send=0xFF;
+		}			
+		delay(10); tmo++;
+		marcstate = halRfReadReg(MARCSTATE_ADDR); //read out state of cc1100 to be sure in IDLE and TX is finished this update also CC1101_status_state
+		//echo_debug(debug_out,"%ifree_byte:0x%02X sts:0x%02X\r\n",tmo,CC1101_status_FIFO_FreeByte,CC1101_status_state);			
+	}
 	echo_debug(debug_out,"%ifree_byte:0x%02X sts:0x%02X\r\n",tmo,CC1101_status_FIFO_FreeByte,CC1101_status_state);
 	CC1101_CMD(SFTX); //flush the Tx_fifo content this clear the status state and put sate machin in IDLE
-	digitalWrite(LED, 0);
 	//end of transition restore default register
 	halRfWriteReg(MDMCFG2,0x02); //Modem Configuration   2-FSK;  no Manchester ; 16/16 sync word bits detected   
 	halRfWriteReg(PKTCTRL0,0x00); //fix packet len
-	
+
 	delay(30); //43ms de bruit
-    /*34ms 0101...01  14.25ms 000...000  14ms 1111...11111  83.5ms de data acquitement*/
-    if (!receive_radian_frame(0x12,150,rxBuffer,sizeof(rxBuffer))) echo_debug(debug_out,"TMO on REC\r\n");
+	/*34ms 0101...01  14.25ms 000...000  14ms 1111...11111  83.5ms de data acquitement*/
+	if (!receive_radian_frame(0x12,150,rxBuffer,sizeof(rxBuffer))) echo_debug(debug_out,"TMO on REC\r\n");
 	delay(30); //50ms de 111111  , mais on a 7+3ms de printf et xxms calculs
-    /*34ms 0101...01  14.25ms 000...000  14ms 1111...11111  582ms de data avec l'index */
+	/*34ms 0101...01  14.25ms 000...000  14ms 1111...11111  582ms de data avec l'index */
 	rxBuffer_size = receive_radian_frame(0x7C,700,rxBuffer,sizeof(rxBuffer));
 	if (rxBuffer_size)
 	{
-        if (debug_out)show_in_hex_array(rxBuffer, rxBuffer_size);
-	    meter_data_size=decode_4bitpbit_serial(rxBuffer, rxBuffer_size,meter_data);
-		if (debug_out)
-		{
-           show_in_hex(meter_data,meter_data_size);
-		   display_meter_report(meter_data,meter_data_size);
-		}
-		else show_in_hex_one_line_GET(meter_data,meter_data_size);
+		if (debug_out)show_in_hex_array(rxBuffer, rxBuffer_size);
+		meter_data_size=decode_4bitpbit_serial(rxBuffer, rxBuffer_size,meter_data);
+		// show_in_hex(meter_data,meter_data_size);
+		display_meter_report(meter_data,meter_data_size);
 	}
 	else
 	{
-	    echo_debug(debug_out,"TMO on REC\r\n");
-    }
-    return meter_data_size;
+		echo_debug(debug_out,"TMO on REC\r\n");
+	}
+	return meter_data_size;
 }

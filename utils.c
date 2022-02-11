@@ -64,6 +64,7 @@ void echo_debug(T_BOOL l_flag,char *fmt, ...)
     vprintf (fmt, args);
     fflush(stdout);
  }
+
 }
 
 void print_time(void)
