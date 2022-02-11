@@ -1,9 +1,9 @@
 # everblu-meters
 Fetch water usage data from Cyble EverBlu meters using RADIAN protocol.
 
-This project uses WiringPi which is deprecated. http://wiringpi.com/news/ 
 
 ## Hardware
+![Raspberry Pi Zero with CC1101](board.jpg)
 Currently the project runs on Raspberry Pi with an RF transreciver (CC1101). 
 
 ### Connections (rpi to CC1101):
@@ -18,18 +18,13 @@ Currently the project runs on Raspberry Pi with an RF transreciver (CC1101).
 
 
 ## Configuration
-You will need serial number of the meter, it can be found on the meter label itself 
+1. Enable SPI in raspi-config.
+2. Install WiringPi from https://github.com/WiringPi/WiringPi/
+3. Set meter serial number and production date in `cc1101.c`, it can be found on the meter label itself:
 ![Cyble Meter Label](meter_label.png)
 
 
 
-```
-CC1101.c : line 664 : TS_len_u8=Make_Radian_Master_req(txbuffer, 16 , 123456 );
-```
-
-Please enable SPI in raspi-config.
-
-Please install WiringPi from https://github.com/WiringPi/WiringPi/
 
 ## Compiling
 

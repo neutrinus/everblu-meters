@@ -14,7 +14,7 @@ uint8_t CC1101_status_FIFO_FreeByte=0;
 uint8_t CC1101_status_FIFO_ReadByte=0;
 uint8_t debug_out=0;
 
-#define METER_YEAR  		16
+#define METER_YEAR  		20
 #define METER_SERIAL  		1234567
 
 
@@ -266,52 +266,6 @@ void cc1101_configureRF_0(void)
 	SPIWriteBurstReg(PATABLE_ADDR, PA, 8);  
 }
 
-void echo_cc1101_MARCSTATE (void)
-{
-	int8_t m_state;
-	m_state = halRfReadReg(MARCSTATE_ADDR); 
-	echo_debug(debug_out,"MARCSTATE : raw:0x%02X  0x%02X",m_state,m_state&0x1F );
-	switch (m_state&0x1F)
-	{
-		case 0x00 : echo_debug(debug_out,"(SLEEP SLEEP)");break;
-		case 0x01 : echo_debug(debug_out,"(IDLE IDLE)");break;
-		case 0x02 : echo_debug(debug_out,"(XOFF XOFF)");break;
-		case 0x03 : echo_debug(debug_out,"(VCOON_MC MANCAL)");break;
-		case 0x04 : echo_debug(debug_out,"(REGON_MC MANCAL)");break;
-		case 0x05 : echo_debug(debug_out,"(MANCAL MANCAL)");break;
-		case 0x06 : echo_debug(debug_out,"(VCOON FS_WAKEUP)");break;
-		case 0x07 : echo_debug(debug_out,"(REGON FS_WAKEUP)");break;
-		case 0x08 : echo_debug(debug_out,"(STARTCAL CALIBRATE)");break;
-		case 0x09 : echo_debug(debug_out,"(BWBOOST SETTLING)");break;
-		case 0x0A : echo_debug(debug_out,"(FS_LOCK SETTLING)");break;
-		case 0x0B : echo_debug(debug_out,"(IFADCON SETTLING)");break;
-		case 0x0C : echo_debug(debug_out,"(ENDCAL CALIBRATE)");break;
-		case 0x0D : echo_debug(debug_out,"(RX RX)");break;
-		case 0x0E : echo_debug(debug_out,"(RX_END RX)");break;
-		case 0x0F : echo_debug(debug_out,"(RX_RST RX)");break;
-		case 0x10 : echo_debug(debug_out,"(TXRX_SWITCH TXRX_SETTLING)");break;
-		case 0x11 : echo_debug(debug_out,"(RXFIFO_OVERFLOW RXFIFO_OVERFLOW)");break;
-		case 0x12 : echo_debug(debug_out,"(FSTXON FSTXON)");break;
-		case 0x13 : echo_debug(debug_out,"(TX TX)");break;
-		case 0x14 : echo_debug(debug_out,"(TX_END TX)");break;
-		case 0x15 : echo_debug(debug_out,"(RXTX_SWITCH RXTX_SETTLING)");break;
-		case 0x16 : echo_debug(debug_out,"(TXFIFO_UNDERFLOW TXFIFO_UNDERFLOW)");break;
-		default : echo_debug(debug_out,"(?)");break;
-	}
-
-
-	echo_debug(debug_out,"\r\n");
-}
-
-void echo_cc1101_full_status(void)
-{
-	echo_debug(debug_out,"PN:0x%02X  Ver:0x%02X\r\n",halRfReadReg(PARTNUM_ADDR),halRfReadReg(VERSION_ADDR));
-	echo_debug(debug_out,"Fest:0x%02X  LQI:0x%02X RSII:0x%02X\r\n",halRfReadReg(FREQEST_ADDR),halRfReadReg(LQI_ADDR),halRfReadReg(RSSI_ADDR));
-	echo_cc1101_MARCSTATE();
-	echo_debug(debug_out,"WOR:0x%02X%02X PKTSTAT:0x%02X\r\n",halRfReadReg(WORTIME1_ADDR),halRfReadReg(WORTIME0_ADDR),halRfReadReg(PKTSTATUS_ADDR));
-	echo_debug(debug_out,"VCO:0x%02X  TXBN:0x%02X RXBN:0x%02X\r\n",halRfReadReg(VCO_VC_DAC_ADDR),halRfReadReg(TXBYTES_ADDR),halRfReadReg(RXBYTES_ADDR));
-}
-
 void  cc1101_init(void)
 {   
 	// to use SPI pi@MinePi ~ $ gpio unload spi  then gpio load spi   
@@ -353,7 +307,6 @@ void cc1101_rec_mode(void)
 	{
 		marcstate = halRfReadReg(MARCSTATE_ADDR);			//read out state of cc1100 to be sure in RX
 	}
-	echo_cc1101_MARCSTATE();
 }	
 
 void echo_cc1101_version(void)
@@ -473,11 +426,11 @@ void display_meter_report (uint8_t *decoded_buffer , uint8_t size)
 		if (size >= 30)
 		{   
 			echo_debug(1,"\r\n%u/%u/20%u %u:%u:%u ",decoded_buffer[24],decoded_buffer[25],decoded_buffer[26],decoded_buffer[28],decoded_buffer[29],decoded_buffer[30]);
-			echo_debug(1,"%ulitres ",decoded_buffer[18]+decoded_buffer[19]*256 + decoded_buffer[20]*65536 + decoded_buffer[21]*16777216);
+			echo_debug(1,"%u litres ",decoded_buffer[18]+decoded_buffer[19]*256 + decoded_buffer[20]*65536 + decoded_buffer[21]*16777216);
 		}
 		if (size >= 48)
 		{
-			echo_debug(1,"Num%u %uMois %uh-%uh ",decoded_buffer[48], decoded_buffer[31],decoded_buffer[44],decoded_buffer[45]);
+			echo_debug(1,"Num %u %u Mois %uh-%uh ",decoded_buffer[48], decoded_buffer[31],decoded_buffer[44],decoded_buffer[45]);
 			decoded_buffer[43]=0; //to be sure that string will end
 			echo_debug(1,"serial:%s ",&decoded_buffer[32]);
 		}
