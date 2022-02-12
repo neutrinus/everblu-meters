@@ -1,9 +1,10 @@
-# everblu-meters
-Fetch water/gas usage data from Cyble EverBlu meters using RADIAN protocol on 433Mhz.
+# everblu-meters - Water usage data for Home Assistant
+Fetch water/gas usage data from Cyble EverBlu meters using RADIAN protocol on 433Mhz. Intergrated with Home Assistant via MQTT. 
+
+Note: HASS autodiscovery is still missing, during development.
 
 Meters supported:
 - Itron EverBlu Cyble Enhanced
-
 
 
 ## Hardware
@@ -25,16 +26,17 @@ The project runs on Raspberry Pi with an RF transreciver (CC1101).
 1. Enable SPI in raspi-config.
 2. Install WiringPi from https://github.com/WiringPi/WiringPi/
 3. Install libmosquitto-dev: `apt install libmosquitto-dev`
-4. Set meter serial number and production date in `cc1101.c`, it can be found on the meter label itself:
+4. Set meter serial number and production date in `everblu_meters.c`, it can be found on the meter label itself:
 ![Cyble Meter Label](meter_label.png)
+5. Configure MQTT connection details in `everblu_meters.c`: `MQTT_HOST`, `MQTT_USER`, 'MQTT_PASS`
 5. Compile the code with `make`
-6. Run `everblu_meters`, after ~2s your meter data should be on the screen.
-
+6. Run `everblu_meters`, after ~2s your meter data should be on the screen and data should be pushed to MQTT.
+7. Setup crontab to run it twice a day
 
 ## Troubleshooting
 
 ### Frequency adjustment
-Your transreciver module may be not calibrated correctly, please modify frequency a bit lower or higher and try again
+Your transreciver module may be not calibrated correctly, please modify frequency a bit lower or higher and try again. You may use RTL-SDR to measure the offset needed.
 
 
 ### Business hours
