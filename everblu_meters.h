@@ -10,8 +10,6 @@
 #include "stdint.h"
 #include "string.h"
 
-#include "wiringPi.h"
-
 #ifdef __unix__
 # include <time.h>
 # include <unistd.h>    // pour sleep
@@ -47,18 +45,23 @@
 #define sleep(x) Sleep(1000 * x)
 #endif
 
+#include "cc1101.h"
+
 typedef unsigned char T_BOOL;       //1 octets
 
 #define GDO2 2 //header  13
-#define GDO1_MISO 13
 #define GDO0 0 //header  11 
-#define MOSI 12
-#define cc1101_CSn 10 ////header  24 
+
+#define METER_YEAR              16
+#define METER_SERIAL            123456
+
+#define MQTT_HOST "localhost"
+#define MQTT_PORT  1883
+#define MQTT_USER "homeassistant"
+#define MQTT_PASS "PASS"
 
 
-#include "utils.c"
-#include "wiringPi.h"
-#include "wiringPiSPI.h"
-
+#define MQTT_KEEP_ALIVE 60
+#define MQTT_MSG_MAX_SIZE  512
 
 
