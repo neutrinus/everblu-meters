@@ -6,7 +6,7 @@
 #include "stdio.h"
 #include "stdarg.h"
 #include "stdlib.h"
-#include "pthread.h"
+//#include "pthread.h"
 #include "stdint.h"
 #include "string.h"
 
@@ -55,13 +55,5 @@ typedef unsigned char T_BOOL;       //1 octets
 #define METER_YEAR              16
 #define METER_SERIAL            123456
 
-#define MQTT_HOST "localhost"
-#define MQTT_PORT  1883
-#define MQTT_USER "homeassistant"
-#define MQTT_PASS "PASS"
-
-
-#define MQTT_KEEP_ALIVE 60
-#define MQTT_MSG_MAX_SIZE  512
 
 

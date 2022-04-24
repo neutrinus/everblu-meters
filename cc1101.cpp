@@ -91,10 +91,21 @@ uint8_t debug_out=0;
 #define TEST1 				0x2D                                    // Various test settings
 #define TEST0 				0x2E                                    // Various test settings
 
+// Change these define according to your ESP8266 board
+#ifdef ESP8266
 #define SPI_CSK  PIN_SPI_SCK
 #define SPI_MISO PIN_SPI_MISO
 #define SPI_MOSI PIN_SPI_MOSI
 #define SPI_SS   PIN_SPI_SS
+#endif
+
+// Change these define according to your ESP32 board
+#ifdef ESP32
+#define SPI_CSK  SCK
+#define SPI_MISO MISO
+#define SPI_MOSI MOSI
+#define SPI_SS   SS
+#endif
 
 int _spi_speed = 0;
 int wiringPiSPIDataRW(int channel, unsigned char *data, int len)
@@ -119,8 +130,14 @@ int wiringPiSPISetup(int channel, int speed)
   pinMode(SPI_SS, OUTPUT);
   digitalWrite(SPI_SS, 1);
 
+#ifdef ESP8266
   SPI.pins(SPI_CSK, SPI_MISO, SPI_MOSI, SPI_SS);
   SPI.begin();
+#endif
+
+#ifdef ESP32
+  SPI.begin(SPI_CSK, SPI_MISO, SPI_MOSI, SPI_SS);
+#endif
 
   return 0;
 }
@@ -320,6 +337,9 @@ void cc1101_configureRF_0(void)
 
 void  cc1101_init(void)
 {   
+  pinMode(GDO2, INPUT);
+  pinMode(GDO0, INPUT);
+
 	// to use SPI pi@MinePi ~ $ gpio unload spi  then gpio load spi   
 	// sinon pas de MOSI ni pas de CSn , buffer de 4kB
 	if ((wiringPiSPISetup (0, 100000)) < 0)        // channel 0 100khz   min 500khz ds la doc ?
