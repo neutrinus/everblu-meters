@@ -9,7 +9,7 @@ Meters supported:
 
 ## Hardware
 ![Raspberry Pi Zero with CC1101](board.jpg)
-The project runs on Raspberry Pi with an RF transreciver (CC1101). 
+The project runs on ESP8266 with an RF transreciver (CC1101). 
 
 ### Connections (rpi to CC1101):
 - pin 1 (3V3) to pin 2 (VCC)
