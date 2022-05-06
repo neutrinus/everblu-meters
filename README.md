@@ -8,28 +8,22 @@ Meters supported:
 
 
 ## Hardware
-![Raspberry Pi Zero with CC1101](board.jpg)
+![ESP8266 with CC1101](board.jpg)
 The project runs on ESP8266/ESP32 with an RF transreciver (CC1101). 
 
-### Connections (ESP32 to CC1101):
-- GND to pin 1 (GND)
-- 3V3 to pin 2 (VCC)
-- GPIO0 to pin 3 (GDO0)
-- GPIO5 (CS) to pin 4 (CSN)
-- GPIO18 (CLK) to pin 5 (SCK)
-- GPIO23 (MOSI) to pin 6 (MOSI)
-- GPIO19 (MISO) to pin 7 (MISO)
-- GPIO2 to pin 8 (GD02)
+### Connections (ESP32/ESP8266 to CC1101):
+- See cc1101.ccp for SPI pins mapping.
+- See everblu_meter.h for GDOx pins mapping.
 
 
 ## Configuration
-1. Install EasyMQTTClient through Arduino library manager as it required for MQTT
+1. Install EspMQTTClient through Arduino library manager as it required for MQTT
 2. Update WiFi and MQTT details in everblu-meters-esp8266.ino, if you do not use username and password for MQTT then comment those out with //
 3. Set meter serial number (without the leading 0) and production year in `everblu_meters.h` (at the end of the file), it can be found on the meter label itself:
 ![Cyble Meter Label](meter_label.png)
 4. Flash the sketch to your ESP device
 5. After a few second your meter data should be on the screen (serial console) and data should be pushed to MQTT.
-6. The device will query the meter twice a day, every 12 hours.
+6. The device will query the meter once a day, every 24 hours and retry every hour if query failed.
 
 ## Troubleshooting
 
