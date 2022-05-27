@@ -12,8 +12,8 @@ Meters supported:
 The project runs on ESP8266/ESP32 with an RF transreciver (CC1101). 
 
 ### Connections (ESP32/ESP8266 to CC1101):
-- See cc1101.ccp for SPI pins mapping.
-- See everblu_meter.h for GDOx pins mapping.
+- See `cc1101.ccp` for SPI pins mapping.
+- See `everblu_meters.h` for GDOx pins mapping, CC1101 frequency and meter serial.
 
 
 ## Configuration
@@ -29,6 +29,7 @@ The project runs on ESP8266/ESP32 with an RF transreciver (CC1101).
 
 ### Frequency adjustment
 Your transreciver module may be not calibrated correctly, please modify frequency a bit lower or higher and try again. You may use RTL-SDR to measure the offset needed.
+You can uncomment the part of the code in the `everblu-meters-esp8266.ino` file that scans all the frequencies around the meter frequency to find the correct one.
 
 ### Business hours
 Your meter may be configured in such a way that is listens for request only during hours when data collectors work - to conserve energy. If you are unable to communicate with the meter, please try again during business hours (8-16).

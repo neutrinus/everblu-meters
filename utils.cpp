@@ -22,17 +22,17 @@ void show_in_hex_array(uint8_t* buffer, size_t len)
 {
   int i=0;
 	for (i=0 ; i<len ; i++) {
-		if (!(i % 16))printf("\r\n");
-		printf("0x%02X,", buffer[i]);
+    if (!(i % 16) && i > 0) Serial.println(""); // printf("\n");
+    Serial.printf("0x%02X, ", buffer[i]);
 	}
-	printf("\n");
+  Serial.println("");
 }
 
 void show_in_hex_one_line(uint8_t* buffer, size_t len)
 {
   int i=0;
 	for (i=0 ; i<len ; i++) {
-		printf("%02X ", buffer[i]);
+    Serial.printf("%02X ", buffer[i]);
 	}
 }
 
@@ -40,7 +40,7 @@ void show_in_hex_one_line_GET(uint8_t* buffer, size_t len)
 {
   int i=0;
 	for (i=0 ; i<len ; i++) {
-		printf("%02XS", buffer[i]);
+    Serial.printf("%02XS", buffer[i]);
 	}
 }
 
@@ -198,7 +198,7 @@ int encode2serial_1_3(uint8_t *inputBuffer, int inputBufferLen, uint8_t *outputB
 	int j = 0;
 	
    for (i=0 ; i < (inputBufferLen * 8) ; i++) {
-//printf("\r\ni=%u",i);
+//printf("\ni=%u",i);
 		if (i % 8 == 0) {
 		   if (i > 0) {
 //printf(" j=%u stopBIT",j);
@@ -268,7 +268,7 @@ int Make_Radian_Master_req(uint8_t *outputBuffer,uint8_t year,uint32_t serial)
   to_encode[6] = (uint8_t)((serial&0x0000FF00)>>8);
   to_encode[7] = (uint8_t) (serial&0x000000FF);
   crc = crc_kermit(to_encode,sizeof(to_encode)-2);
-  //printf("crc:%x\r\n",crc);
+  //printf("crc:%x\n",crc);
   to_encode[sizeof(to_encode)-2]=(uint8_t)((crc&0xFF00)>>8);
   to_encode[sizeof(to_encode)-1]=(uint8_t)(crc&0x00FF);
   //show_in_hex_one_line(to_encode,sizeof(to_encode));

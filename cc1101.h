@@ -9,7 +9,8 @@ struct tmeter_data {
   int time_end; // like 4pm
 };
 
-void  cc1101_init(void);
+void setMHZ(float mhz);
+void  cc1101_init(float freq);
 struct tmeter_data get_meter_data(void);
 
 #endif // __CC1101_H__
