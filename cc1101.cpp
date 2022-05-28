@@ -378,7 +378,6 @@ void cc1101_configureRF_0(float freq)
 
 void  cc1101_init(float freq)
 {
-  //pinMode(GDO2, INPUT_PULLUP);
   pinMode(GDO0, INPUT_PULLUP);
 
   // to use SPI pi@MinePi ~ $ gpio unload spi  then gpio load spi   

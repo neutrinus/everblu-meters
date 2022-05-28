@@ -10,6 +10,11 @@
 
 // Edit "everblu_meters.h" file then change the define at the end of the file
 
+#ifndef LED_BUILTIN
+// Change this pin if needed
+#define LED_BUILTIN 2
+#endif
+
 
 EspMQTTClient mqtt(
   "MyESSID",            // Your Wifi SSID
@@ -26,9 +31,13 @@ void onUpdateData()
   struct tmeter_data meter_data;
   meter_data = get_meter_data();
 
+  time_t tnow = time(nullptr);
+  struct tm *ptm = gmtime(&tnow);
+  Serial.printf("Current date (UTC) : %04d/%02d/%02d %02d:%02d:%02d - %s\n", ptm->tm_year + 1900, ptm->tm_mon + 1, ptm->tm_mday, ptm->tm_hour, ptm->tm_min, ptm->tm_sec, String(tnow, DEC).c_str());
+
   if (meter_data.reads_counter == 0 && meter_data.liters == 0) {
     Serial.println("Unable to retrieve data from meter. Retry later...");
-    // Call back this function in 1 hours (in miliseconds)
+    // Call back this function in 1 hour (in miliseconds)
     mqtt.executeDelayed(1000 * 60 * 60 * 1, onUpdateData);
     return;
   }
@@ -42,6 +51,8 @@ void onUpdateData()
   mqtt.publish("everblu/cyble/counter", String(meter_data.reads_counter, DEC), true);
   delay(50); // Do not remove
   mqtt.publish("everblu/cyble/battery", String(meter_data.battery_left, DEC), true);
+  delay(50); // Do not remove
+  mqtt.publish("everblu/cyble/timestamp", String(tnow, DEC), true); // timestamp since epoch in UTC
 
   // Call back this function in 24 hours (in miliseconds)
   mqtt.executeDelayed(1000 * 60 * 60 * 24, onUpdateData);
@@ -50,6 +61,13 @@ void onUpdateData()
 void onConnectionEstablished()
 {
   Serial.println("Connected to MQTT Broker :)");
+
+  configTzTime("UTC0", "pool.ntp.org");
+
+  mqtt.subscribe("everblu/cyble/trigger", [](const String& message) {
+    if (message.length() > 0)
+      onUpdateData();
+  });
 
   onUpdateData();
 }
@@ -86,7 +104,7 @@ void setup()
   */
 
 
-  
+
   cc1101_init(FREQUENCY);
 
   /*
@@ -94,11 +112,11 @@ void setup()
   struct tmeter_data meter_data;
   meter_data = get_meter_data();
   Serial.printf("\nLiters : %d\nBattery (in months) : %d\nCounter : %d\nTime start : %d\nTime end : %d\n\n", meter_data.liters, meter_data.battery_left, meter_data.reads_counter, meter_data.time_start, meter_data.time_end);
-  while (42); 
+  while (42);
   */
 }
 
 void loop()
 {
-  mqtt.loop();
+  mqtt.loop(); 
 }
