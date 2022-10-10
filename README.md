@@ -1,5 +1,5 @@
 # everblu-meters - Water usage data for Home Assistant
-Fetch water/gas usage data from Cyble EverBlu meters using RADIAN protocol on 433Mhz. Intergrated with Home Assistant via MQTT. 
+Fetch water/gas usage data from Cyble EverBlu meters using RADIAN protocol on 433Mhz. Integrated with Home Assistant via MQTT. 
 
 Note: HASS autodiscovery is still missing, during development.
 
@@ -43,8 +43,11 @@ Your transreciver module may be not calibrated correctly, please modify frequenc
 Your meter may be configured in such a way that is listens for request only during hours when data collectors work - to conserve energy. If you are unable to communicate with the meter, please try again during business hours (8-16).
 
 ### Serial number starting with 0
-Please ignore the trailing 0, provide serial in configuration whthout it.
+Please ignore the leading 0, provide serial in configuration without it.
 
+
+### Save power
+The meter has internal battery, which should last for 10 years when queried once a day. 
 
 ## Origin and license
 
@@ -56,4 +59,7 @@ The license is unknown, citing one of the authors (fred):
 > I didn't put a license on this code maybe I should, I didn't know much about it in terms of licensing.
 > this code was made by "looking" at the radian protocol which is said to be open source earlier in the page, I don't know if that helps?
 
+# Links
+
+There is a very nice port to ESP8266/ESP32: https://github.com/psykokwak-com/everblu-meters-esp8266
 
